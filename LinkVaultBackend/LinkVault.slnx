@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LinkVault.API/LinkVault.API.csproj" />
+    <Project Path="src/LinkVault.Application/LinkVault.Application.csproj" />
+    <Project Path="src/LinkVault.Core/LinkVault.Core.csproj" />
+    <Project Path="src/LinkVault.Infrastructure/LinkVault.Infrastructure.csproj" />
+  </Folder>
+</Solution>
