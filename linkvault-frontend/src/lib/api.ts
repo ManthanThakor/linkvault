@@ -1,3 +1,5 @@
+import type { User } from "@/types"
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5253"
 
 interface FetchOptions extends RequestInit {
@@ -89,11 +91,26 @@ async function fetchWithAuth(url: string, options: FetchOptions = {}): Promise<R
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
-  const data = await res.json()
+  const json = await res.json()
   if (!res.ok) {
-    throw new Error(data.message || "An error occurred")
+    const message = json.message || json.title || Object.values(json.errors || {}).flat().join(", ") || "An error occurred"
+    throw new Error(message)
   }
-  return data
+  if (json && typeof json === "object" && "success" in json && "data" in json) {
+    return json.data as T
+  }
+  return json as T
+}
+
+export async function fetchAuthMe(): Promise<User | null> {
+  try {
+    const res = await fetchWithAuth(`${API_BASE}/api/auth/me`)
+    if (!res.ok) return null
+    const json = await res.json()
+    return json?.data ?? null
+  } catch {
+    return null
+  }
 }
 
 export const api = {

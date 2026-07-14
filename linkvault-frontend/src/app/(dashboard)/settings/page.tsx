@@ -1,104 +1,92 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
-import { useProfile, useUpdateProfile } from "@/hooks/useApi"
-import { GlassCard } from "@/components/shared/glass-card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Sun, Moon, Monitor, Settings as SettingsIcon, User, Bell, Palette, Shield } from "lucide-react"
+import { Palette, Bell, Shield, LogOut, Sun, Moon, Monitor } from "lucide-react"
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
-  const { data: profile, isLoading } = useProfile()
-  const updateProfile = useUpdateProfile()
   const { toast } = useToast()
-  const [name, setName] = useState("")
-  const [saving, setSaving] = useState(false)
-
-  const handleSaveProfile = async () => {
-    if (!name.trim()) return
-    setSaving(true)
-    try {
-      await updateProfile.mutateAsync({ name })
-      toast({ title: "Profile updated", variant: "success" })
-    } catch (err: any) {
-      toast({ title: "Failed to update", description: err.message, variant: "destructive" })
-    } finally { setSaving(false) }
-  }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your preferences</p>
-      </motion.div>
+    <div className="max-w-2xl mx-auto space-y-5">
+      <div>
+        <h1 className="heading-xl text-glow-primary">Settings</h1>
+        <p className="text-muted-foreground mt-1">Configure your preferences</p>
+      </div>
 
-      <GlassCard>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><User className="w-4 h-4 text-muted-foreground" /> Profile</h2>
-        {isLoading ? (
-          <div className="space-y-3"><Skeleton className="h-10" /><Skeleton className="h-10" /><Skeleton className="h-10 w-24" /></div>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input value={profile?.email ?? ""} disabled className="bg-muted/50" />
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-9 h-9 rounded-lg border border-primary/20 bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Palette className="w-4 h-4 text-primary" />
             </div>
-            <div className="space-y-2">
-              <Label>Name</Label>
-              <Input value={name || profile?.name || ""} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+            <div className="flex-1">
+              <h3 className="font-bold text-sm">Theme</h3>
+              <p className="text-xs text-muted-foreground mb-3">Choose your preferred appearance</p>
+              <div className="flex gap-2">
+                {[{ value: "light", icon: Sun, label: "Light" }, { value: "dark", icon: Moon, label: "Dark" }, { value: "system", icon: Monitor, label: "System" }].map(({ value, icon: Icon, label }) => (
+                  <button key={value} onClick={() => setTheme(value)}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-lg border text-sm font-bold transition-all ${
+                      theme === value ? "border-primary bg-primary/10 text-primary shadow-glow-primary" : "border-border hover:border-primary/30 text-muted-foreground hover:text-foreground"
+                    }`}>
+                    <Icon className="w-4 h-4" /> {label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <Button onClick={handleSaveProfile} disabled={saving || !name.trim()} variant="gradient">{saving ? "Saving..." : "Save"}</Button>
           </div>
-        )}
-      </GlassCard>
+        </CardContent>
+      </Card>
 
-      <GlassCard>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Palette className="w-4 h-4 text-muted-foreground" /> Appearance</h2>
-        <div className="space-y-4">
-          <Label>Theme</Label>
-          <div className="flex gap-3">
-            {[
-              { value: "light", icon: Sun, label: "Light" },
-              { value: "dark", icon: Moon, label: "Dark" },
-              { value: "system", icon: Monitor, label: "System" },
-            ].map(({ value, icon: Icon, label }) => (
-              <button
-                key={value}
-                onClick={() => setTheme(value)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
-                  theme === value ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="text-sm">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </GlassCard>
-
-      <GlassCard>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Bell className="w-4 h-4 text-muted-foreground" /> Notifications</h2>
-        <div className="space-y-4">
-          {["Email notifications", "Push notifications", "Weekly digest"].map((item) => (
-            <div key={item} className="flex items-center justify-between">
-              <span className="text-sm">{item}</span>
-              <Switch defaultChecked />
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-9 h-9 rounded-lg border border-border bg-surface flex items-center justify-center flex-shrink-0">
+              <Bell className="w-4 h-4 text-muted-foreground" />
             </div>
-          ))}
-        </div>
-      </GlassCard>
+            <div>
+              <h3 className="font-bold text-sm">Notifications</h3>
+              <p className="text-xs text-muted-foreground mb-3">Manage notification preferences</p>
+              <p className="text-xs text-muted-foreground">Coming soon</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <GlassCard>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Shield className="w-4 h-4 text-muted-foreground" /> Security</h2>
-        <Button variant="outline">Change Password</Button>
-      </GlassCard>
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-9 h-9 rounded-lg border border-border bg-surface flex items-center justify-center flex-shrink-0">
+              <Shield className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-sm">Security</h3>
+              <p className="text-xs text-muted-foreground mb-3">Password and authentication</p>
+              <Button variant="outline" size="sm" onClick={() => toast({ title: "Coming soon" })}>Change Password</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-destructive/30">
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-9 h-9 rounded-lg border border-destructive/30 bg-destructive/10 flex items-center justify-center flex-shrink-0">
+              <LogOut className="w-4 h-4 text-destructive" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-sm text-destructive">Danger Zone</h3>
+              <p className="text-xs text-muted-foreground mb-3">Delete your account permanently</p>
+              <Button variant="destructive" size="sm" onClick={() => {
+                if (window.confirm("Are you sure? This cannot be undone.")) toast({ title: "Account deletion coming soon" })
+              }}>Delete Account</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

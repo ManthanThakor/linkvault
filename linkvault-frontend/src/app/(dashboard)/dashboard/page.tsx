@@ -1,149 +1,165 @@
 "use client"
 
+import { useDashboardStats, useLinks } from "@/hooks/useApi"
 import { motion } from "framer-motion"
-import { GlassCard } from "@/components/shared/glass-card"
-import { AnimatedCounter } from "@/components/shared/animated-counter"
-import { useDashboardStats, useLinks, useCategories, useTags } from "@/hooks/useApi"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { useRouter } from "next/navigation"
-import {
-  Link2, FolderTree, Tags, MousePointerClick,
-  ExternalLink, Clock, TrendingUp, Plus
-} from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AnimatedCounter } from "@/components/shared/animated-counter"
+import { TiltCard } from "@/components/shared/tilt-card"
+import { Link2, MousePointerClick, TrendingUp, Tags, Globe, ExternalLink, Sparkles } from "lucide-react"
+
+const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } } }
+const item = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 200, damping: 22 } } }
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const { data: stats, isLoading: statsLoading } = useDashboardStats()
+  const { data: stats, isLoading } = useDashboardStats()
   const { data: linksData } = useLinks(1, 5)
-  const { data: categories } = useCategories()
-  const { data: tags } = useTags()
+  const recentLinks = linksData?.items?.slice(0, 4) ?? []
 
-  const summaryCards = [
-    { label: "Total Links", value: stats?.totalLinks ?? 0, icon: Link2, color: "from-blue-500/20 to-blue-600/20", iconColor: "text-blue-500" },
-    { label: "Total Clicks", value: stats?.totalClicks ?? 0, icon: MousePointerClick, color: "from-emerald-500/20 to-emerald-600/20", iconColor: "text-emerald-500" },
-    { label: "Categories", value: stats?.totalCategories ?? categories?.length ?? 0, icon: FolderTree, color: "from-purple-500/20 to-purple-600/20", iconColor: "text-purple-500" },
-    { label: "Tags", value: stats?.totalTags ?? tags?.length ?? 0, icon: Tags, color: "from-amber-500/20 to-amber-600/20", iconColor: "text-amber-500" },
+  const metrics = [
+    { label: "Total Links", value: stats?.totalLinks ?? 0, icon: Link2, trend: "+12%", gradient: "from-primary/20 via-primary/10 to-transparent border-primary/20" },
+    { label: "Total Clicks", value: stats?.totalClicks ?? 0, icon: MousePointerClick, trend: "+28%", gradient: "from-secondary/20 via-secondary/10 to-transparent border-secondary/20" },
+    { label: "Categories", value: stats?.totalCategories ?? 0, icon: TrendingUp, trend: `${stats?.totalCategories ?? 0} active`, gradient: "from-accent/20 via-accent/10 to-transparent border-accent/20" },
+    { label: "Tags", value: stats?.totalTags ?? 0, icon: Tags, trend: `${stats?.totalTags ?? 0} total`, gradient: "from-primary/20 via-secondary/10 to-transparent border-primary/20" },
   ]
 
   return (
-    <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={item} className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Overview of your link vault</p>
+          <h1 className="heading-xl text-glow-primary">Dashboard</h1>
+          <p className="text-muted-foreground/70 mt-1.5 text-sm">Your link vault overview</p>
         </div>
-        <Button onClick={() => router.push("/links")} variant="gradient" size="lg">
-          <Plus className="w-4 h-4 mr-2" /> Add Link
-        </Button>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+          className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary/8 border border-primary/20"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Sparkles className="w-4 h-4 text-primary" />
+          </motion.div>
+          <span className="text-xs font-bold text-primary">All systems active</span>
+        </motion.div>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryCards.map((card, i) => (
-          <GlassCard key={card.label} delay={i * 0.1}>
-            {statsLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-10 w-10 rounded-xl" />
-                <Skeleton className="h-8 w-24" />
-                <Skeleton className="h-4 w-16" />
+      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {metrics.map((metric) => {
+          const Icon = metric.icon
+          return (
+          <TiltCard key={metric.label}>
+            <Card className="hover:border-primary/30 transition-all duration-300 h-full">
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${metric.gradient} border flex items-center justify-center`}>
+                    <Icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <motion.span
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-[10px] font-bold text-success tracking-wide"
+                  >
+                    {metric.trend}
+                  </motion.span>
+                </div>
+                <div className="text-2xl font-extrabold tracking-tight">
+                  {isLoading ? <Skeleton className="h-7 w-16 rounded" /> : <AnimatedCounter value={metric.value} />}
+                </div>
+                <div className="text-xs text-muted-foreground/70 font-semibold mt-0.5">{metric.label}</div>
+              </div>
+            </Card>
+          </TiltCard>
+          )
+        })}
+      </motion.div>
+
+      <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Recent Links</CardTitle>
+            <Badge variant="primary" size="sm">{recentLinks.length} items</Badge>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
+            ) : recentLinks.length > 0 ? (
+              <div className="space-y-1">
+                {recentLinks.map((link, i) => (
+                  <motion.div
+                    key={link.id}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-surface-hover/50 transition-all duration-200 hover:border-l-2 hover:border-primary hover:pl-[11px]"
+                  >
+                    <div className="w-8 h-8 rounded-lg border border-border bg-surface/50 flex items-center justify-center flex-shrink-0 group-hover:border-primary/30 group-hover:shadow-glow-primary transition-all duration-300">
+                      <Globe className="w-4 h-4 text-muted-foreground/60 group-hover:text-primary transition-colors" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate">{link.title}</p>
+                      <p className="text-xs text-muted-foreground/60 truncate mt-0.5">{link.originalUrl}</p>
+                    </div>
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                      <span className="text-[10px] font-bold text-muted-foreground/60">{link.clickCount ?? 0} clicks</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/60" />
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             ) : (
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{card.label}</p>
-                  <AnimatedCounter value={card.value} className="text-2xl font-bold" />
+              <p className="text-sm text-muted-foreground/60 py-8 text-center">No links yet. Add your first link!</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <TiltCard>
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Stats</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Capacity</span>
+                  <span className="text-[10px] font-bold text-muted-foreground/60">--</span>
                 </div>
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center`}>
-                  <card.icon className={`w-5 h-5 ${card.iconColor}`} />
+                <div className="h-1.5 rounded-full bg-surface-hover/50 overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: "35%" }}
+                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="h-full rounded-full bg-gradient-to-r from-primary via-secondary to-accent"
+                  />
                 </div>
               </div>
-            )}
-          </GlassCard>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GlassCard delay={0.4} className="lg:col-span-1">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Clock className="w-4 h-4 text-muted-foreground" /> Recent Links
-            </h2>
-            <Button variant="ghost" size="sm" onClick={() => router.push("/links")}>
-              View all <ExternalLink className="w-3 h-3 ml-1" />
-            </Button>
-          </div>
-          <div className="space-y-3">
-            {statsLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-lg" />
-                  <div className="flex-1 space-y-1">
-                    <Skeleton className="h-4 w-48" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                </div>
-              ))
-            ) : (stats?.recentLinks ?? []).length > 0 ? (
-              stats!.recentLinks!.map((link) => (
-                <div key={link.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 transition-colors">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center">
-                    <Link2 className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{link.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{link.url}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-[10px]">{link.clickCount ?? 0} clicks</Badge>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">No links yet. Add your first link!</p>
-            )}
-          </div>
-        </GlassCard>
-
-        <GlassCard delay={0.5} className="lg:col-span-1">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-muted-foreground" /> Top Links
-            </h2>
-          </div>
-          <div className="space-y-3">
-            {statsLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <div className="flex-1 space-y-1">
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                </div>
-              ))
-            ) : (stats?.topLinks ?? []).length > 0 ? (
-              stats!.topLinks!.map((link, i) => (
-                <div key={link.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{link.title}</p>
-                    <p className="text-xs text-muted-foreground">{link.clickCount ?? 0} clicks</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">No click data yet.</p>
-            )}
-          </div>
-        </GlassCard>
-      </div>
-    </div>
+              <div className="space-y-3.5 pt-4 border-t border-border">
+                {[
+                  { label: "Categories", value: stats?.totalCategories ?? 0 },
+                  { label: "Tags", value: stats?.totalTags ?? 0 },
+                ].map((s, i) => (
+                  <motion.div
+                    key={s.label}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + i * 0.1 }}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="text-xs text-muted-foreground/60 font-semibold">{s.label}</span>
+                    <span className="text-sm font-extrabold">
+                      {isLoading ? <Skeleton className="h-4 w-8 inline-block rounded" /> : s.value}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TiltCard>
+      </motion.div>
+    </motion.div>
   )
 }

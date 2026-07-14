@@ -23,11 +23,20 @@ public class DashboardService : IDashboardService
     public async Task<ApiResponse<DashboardSummary>> GetSummaryAsync(Guid userId)
     {
         var linkRepo = _unitOfWork.Repository<Link>();
+        var categoryRepo = _unitOfWork.Repository<Category>();
+        var tagRepo = _unitOfWork.Repository<Tag>();
         var clickLogRepo = _unitOfWork.Repository<ClickLog>();
         var now = DateTime.UtcNow;
 
         var links = await linkRepo.FindAsync(l => l.UserId == userId);
         var linksList = links.ToList();
+
+        var allLinks = linksList.AsQueryable();
+        var recentLinks = allLinks.OrderByDescending(l => l.CreatedAt).Take(5).ToList();
+        var topLinks = allLinks.OrderByDescending(l => l.ClickCount).Take(5).ToList();
+
+        var categories = await categoryRepo.FindAsync(c => c.UserId == userId);
+        var tags = await tagRepo.FindAsync(t => t.UserId == userId);
 
         var summary = new DashboardSummary
         {
@@ -37,7 +46,11 @@ public class DashboardService : IDashboardService
             FavoriteLinks = linksList.Count(l => l.IsFavorite),
             TotalClicks = linksList.Sum(l => l.ClickCount),
             TodayClicks = await clickLogRepo.CountAsync(cl =>
-                cl.Link != null && cl.Link.UserId == userId && cl.CreatedAt.Date == now.Date)
+                cl.Link != null && cl.Link.UserId == userId && cl.CreatedAt.Date == now.Date),
+            TotalCategories = categories.Count(),
+            TotalTags = tags.Count(),
+            RecentLinks = _mapper.Map<List<LinkResponse>>(recentLinks),
+            TopLinks = _mapper.Map<List<LinkAnalytics>>(topLinks)
         };
 
         return ApiResponse<DashboardSummary>.Ok(summary);

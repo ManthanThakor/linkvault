@@ -82,6 +82,20 @@ public class LinkService : ILinkService
         await linkRepo.AddAsync(link);
         await _unitOfWork.SaveChangesAsync();
 
+        if (request.TagIds != null && request.TagIds.Count != 0)
+        {
+            var tagRepo = _unitOfWork.Repository<Tag>();
+            var linkTagRepo = _unitOfWork.Repository<LinkTag>();
+            var tags = await tagRepo.FindAsync(t => request.TagIds.Contains(t.Id));
+            foreach (var tag in tags)
+            {
+                var lt = new LinkTag { LinkId = link.Id, TagId = tag.Id, Tag = tag };
+                await linkTagRepo.AddAsync(lt);
+                link.LinkTags.Add(lt);
+            }
+            await _unitOfWork.SaveChangesAsync();
+        }
+
         _logger.LogInformation("Link created: {ShortCode} -> {Url}", shortCode, request.OriginalUrl);
 
         var response = _mapper.Map<LinkResponse>(link);
@@ -104,6 +118,23 @@ public class LinkService : ILinkService
         link.UpdatedAt = DateTime.UtcNow;
 
         linkRepo.Update(link);
+
+        if (request.TagIds != null)
+        {
+            var linkTagRepo = _unitOfWork.Repository<LinkTag>();
+            var existing = await linkTagRepo.FindAsync(lt => lt.LinkId == id);
+            foreach (var t in existing) linkTagRepo.Delete(t);
+
+            var tagRepo = _unitOfWork.Repository<Tag>();
+            var tags = await tagRepo.FindAsync(t => request.TagIds.Contains(t.Id));
+            foreach (var tag in tags)
+            {
+                var lt = new LinkTag { LinkId = id, TagId = tag.Id, Tag = tag };
+                await linkTagRepo.AddAsync(lt);
+                link.LinkTags.Add(lt);
+            }
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
         var response = _mapper.Map<LinkResponse>(link);

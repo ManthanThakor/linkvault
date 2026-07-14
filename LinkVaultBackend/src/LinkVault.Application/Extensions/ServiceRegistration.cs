@@ -1,3 +1,4 @@
+using System.Reflection;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,7 @@ public static class ServiceRegistration
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddAutoMapper(typeof(MappingProfile));
+        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<MappingProfile>();
 

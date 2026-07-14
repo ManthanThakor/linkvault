@@ -114,4 +114,14 @@ public class AdminService : IAdminService
         var response = _mapper.Map<IEnumerable<AuditLogResponse>>(logs);
         return ApiResponse<IEnumerable<AuditLogResponse>>.Ok(response);
     }
+
+    public Task<ApiResponse<IEnumerable<RoleResponse>>> GetRolesAsync()
+    {
+        var roles = new List<RoleResponse>
+        {
+            new() { Id = "user", Name = "User", Description = "Regular user with basic permissions" },
+            new() { Id = "admin", Name = "Admin", Description = "Full system access" }
+        };
+        return Task.FromResult(ApiResponse<IEnumerable<RoleResponse>>.Ok(roles));
+    }
 }

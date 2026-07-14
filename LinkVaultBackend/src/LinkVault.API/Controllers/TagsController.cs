@@ -83,7 +83,7 @@ public class TagsController : ControllerBase
 
     private Guid GetUserId()
     {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var claim = User.FindFirst("sub");
         return Guid.Parse(claim!.Value);
     }
 }

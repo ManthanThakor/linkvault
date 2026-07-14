@@ -108,23 +108,6 @@ export interface Collection {
   createdAt: string
 }
 
-export interface Bookmark {
-  id: string
-  linkId: string
-  link?: Link
-  userId: string
-  createdAt: string
-}
-
-export interface ClickLog {
-  id: string
-  linkId: string
-  timestamp: string
-  ipAddress?: string
-  userAgent?: string
-  referer?: string
-}
-
 export interface LinkStats {
   linkId: string
   totalClicks: number

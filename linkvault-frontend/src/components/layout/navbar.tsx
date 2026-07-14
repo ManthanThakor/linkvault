@@ -1,130 +1,198 @@
 "use client"
 
-import { useState } from "react"
-import { useTheme } from "next-themes"
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
 import { useAuthStore } from "@/stores/useAuthStore"
-import { useUIStore } from "@/stores/useUIStore"
-import { clearTokens } from "@/lib/api"
-import { useRouter } from "next/navigation"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import {
-  Search, Sun, Moon, Monitor, Menu, Command, Bell,
-  User, LogOut, Settings
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  LayoutDashboard, Link2, FolderTree, Tags, BookmarkPlus, Heart, BarChart3, User, Settings,
+  Bell, LogOut, Menu, X, ChevronDown
 } from "lucide-react"
 
+const navLinks = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/links", icon: Link2, label: "Links" },
+  { href: "/categories", icon: FolderTree, label: "Categories" },
+  { href: "/tags", icon: Tags, label: "Tags" },
+  { href: "/collections", icon: BookmarkPlus, label: "Collections" },
+  { href: "/favorites", icon: Heart, label: "Favorites" },
+  { href: "/analytics", icon: BarChart3, label: "Analytics" },
+]
+
 export function Navbar() {
-  const { theme, setTheme } = useTheme()
+  const pathname = usePathname()
   const { user, logout } = useAuthStore()
-  const { toggleSidebar, setCommandPaletteOpen } = useUIStore()
-  const router = useRouter()
-  const [mounted, setMounted] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
-  useState(() => setMounted(true))
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
-  const handleLogout = () => {
-    logout()
-    clearTokens()
-    router.push("/auth/login")
-  }
+  const initials = user?.name?.split(" ").map((n: string) => n[0]).join("").toUpperCase() ?? user?.email?.[0].toUpperCase() ?? "?"
 
   return (
-    <header className="glass-nav sticky top-0 z-30 h-16">
-      <div className="flex items-center justify-between h-full px-4 lg:px-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
-            <Menu className="w-5 h-5" />
-          </Button>
+    <>
+      <nav className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        scrolled
+          ? "h-12 bg-background/85 backdrop-blur-xl border-b border-border shadow-[0_4px_30px_oklch(0_0_0/0.3)]"
+          : "h-14 bg-background/50 backdrop-blur-md border-b border-transparent"
+      )}>
+        <div className="max-w-[1400px] mx-auto h-full flex items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-6">
+            <Link href="/dashboard" className="flex items-center gap-2.5 group">
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: -5 }}
+                whileTap={{ scale: 0.9 }}
+                className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center shadow-glow-primary group-hover:animate-[logo-glow_1.5s_ease-in-out_infinite] transition-all duration-300"
+              >
+                <span className="text-sm font-extrabold text-white drop-shadow-lg">L</span>
+              </motion.div>
+              <motion.span
+                initial={{ opacity: 0, x: -5 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="font-extrabold text-lg tracking-tight hidden sm:block bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
+              >
+                LinkVault
+              </motion.span>
+            </Link>
 
-          <Button
-            variant="glass"
-            size="sm"
-            onClick={() => setCommandPaletteOpen(true)}
-            className="hidden md:flex items-center gap-2 text-muted-foreground w-64 justify-between"
-          >
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              <span>Search links...</span>
+            <div className="hidden md:flex items-center gap-0.5">
+              {navLinks.map(({ href, icon: Icon, label }) => {
+                const active = pathname === href || pathname.startsWith(href + "/")
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={cn(
+                      "relative px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2",
+                      active
+                        ? "text-primary"
+                        : "text-muted-foreground/70 hover:text-foreground hover:bg-surface/50"
+                    )}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="nav-active"
+                        className="absolute inset-0 rounded-lg bg-primary/10 border border-primary/20 shadow-glow-primary"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Icon className={cn("w-4 h-4 transition-transform duration-200", active ? "" : "group-hover:scale-110")} />
+                      {label}
+                    </span>
+                  </Link>
+                )
+              })}
             </div>
-            <kbd className="hidden lg:inline-flex items-center gap-1 rounded-md border bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium">
-              <Command className="w-3 h-3" />K
-            </kbd>
-          </Button>
-        </div>
+          </div>
 
-        <div className="flex items-center gap-3">
-          {mounted && (
+          <div className="flex items-center gap-2">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link href="/notifications" className="relative w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-surface/50 transition-all duration-200">
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary animate-neon-pulse" />
+              </Link>
+            </motion.div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  {theme === "dark" ? <Moon className="w-4 h-4" /> :
-                   theme === "light" ? <Sun className="w-4 h-4" /> :
-                   <Monitor className="w-4 h-4" />}
-                </Button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-2.5 pl-2.5 pr-1.5 py-1.5 rounded-lg hover:bg-surface/50 transition-all duration-200"
+                >
+                  <Avatar className="w-7 h-7 border border-border ring-1 ring-primary/20">
+                    <AvatarImage src={user?.avatarUrl} />
+                    <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+                  </Avatar>
+                  {!scrolled && (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-sm font-semibold hidden sm:block"
+                    >
+                      {user?.name ?? "User"}
+                    </motion.span>
+                  )}
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/70" />
+                </motion.button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                  <Sun className="w-4 h-4 mr-2" /> Light
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                  <Moon className="w-4 h-4 mr-2" /> Dark
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
-                  <Monitor className="w-4 h-4 mr-2" /> System
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-56 mt-2">
+                <div className="px-3 py-2.5 border-b border-border">
+                  <p className="text-sm font-bold">{user?.name}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">{user?.email}</p>
+                </div>
+                <div className="p-1">
+                  <DropdownMenuItem asChild><Link href="/profile"><User className="w-4 h-4" /> Profile</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/settings"><Settings className="w-4 h-4" /> Settings</Link></DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="text-destructive"><LogOut className="w-4 h-4" /> Sign Out</DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
 
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={user?.avatarUrl} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                    {user?.name?.slice(0, 2).toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="flex items-center gap-3 px-2 py-2">
-                <Avatar className="w-10 h-10">
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {user?.name?.slice(0, 2).toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">{user?.name}</span>
-                  <span className="text-xs text-muted-foreground">{user?.email}</span>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/profile")}>
-                <User className="w-4 h-4 mr-2" /> Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/settings")}>
-                <Settings className="w-4 h-4 mr-2" /> Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                <LogOut className="w-4 h-4 mr-2" /> Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center hover:bg-surface/50 transition-all"
+            >
+              {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </motion.button>
+          </div>
         </div>
-      </div>
-    </header>
+      </nav>
+
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -12, scaleY: 0.95, transformOrigin: "top" }}
+            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+            exit={{ opacity: 0, y: -12, scaleY: 0.95 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed top-14 left-0 right-0 z-40 bg-surface-elevated/95 backdrop-blur-xl border-b border-border md:hidden"
+          >
+            <div className="p-3 space-y-1">
+              {navLinks.map(({ href, icon: Icon, label }, i) => {
+                const active = pathname === href || pathname.startsWith(href + "/")
+                return (
+                  <motion.div
+                    key={href}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <Link
+                      href={href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all",
+                        active ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground/70 hover:text-foreground hover:bg-surface/50"
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {label}
+                    </Link>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

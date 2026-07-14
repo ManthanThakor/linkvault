@@ -5,9 +5,16 @@ public class AnalyticsOverview
     public int TotalClicks { get; set; }
     public int TodayClicks { get; set; }
     public DateTime? LastClick { get; set; }
+    public List<DayClick> ClicksByDay { get; set; } = new();
     public List<LinkAnalytics> TopLinks { get; set; } = new();
-    public List<CategoryAnalytics> MostUsedCategories { get; set; } = new();
+    public List<CategoryAnalytics> TopCategories { get; set; } = new();
     public List<LinkAnalytics> RecentlyCreatedLinks { get; set; } = new();
+}
+
+public class DayClick
+{
+    public string Date { get; set; } = string.Empty;
+    public int Count { get; set; }
 }
 
 public class LinkAnalytics

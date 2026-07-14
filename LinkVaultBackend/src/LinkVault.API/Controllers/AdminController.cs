@@ -53,6 +53,13 @@ public class AdminController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("roles")]
+    public async Task<IActionResult> GetRoles()
+    {
+        var result = await _adminService.GetRolesAsync();
+        return Ok(result);
+    }
+
     [HttpGet("audit-logs")]
     public async Task<IActionResult> GetAuditLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {

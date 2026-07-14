@@ -3,7 +3,6 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validations"
@@ -13,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { LinkIcon, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react"
+import { Eye, EyeOff, ArrowRight, CheckCircle2 } from "lucide-react"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -38,26 +37,38 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-background flex">
+      <div className="hidden lg:flex w-1/2 bg-surface border-r-2 border-border items-center justify-center p-12">
+        <div className="max-w-sm">
+          <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center shadow-[0_3px_0_oklch(0.40_0.24_25)] mb-6">
+            <span className="text-primary-foreground font-extrabold text-lg">L</span>
+          </div>
+          <h2 className="heading-xl mb-3">Set new password</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Choose a strong password that you haven&apos;t used before.
+          </p>
+        </div>
+      </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative">
-        <div className="glass-card rounded-2xl p-8 shadow-2xl">
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg shadow-primary/20 mb-4">
-              <LinkIcon className="w-7 h-7 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold">Reset password</h1>
-            <p className="text-muted-foreground text-sm mt-1">Enter your new password</p>
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <div className="mb-8">
+            <h1 className="heading-xl">Reset password</h1>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              {success ? "Your password has been reset" : "Enter your new password"}
+            </p>
           </div>
 
           {success ? (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-4">
-              <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto" />
-              <h2 className="text-lg font-semibold">Password reset!</h2>
-              <p className="text-sm text-muted-foreground">Redirecting to login...</p>
-            </motion.div>
+            <div className="text-center space-y-5 py-4">
+              <div className="w-16 h-16 rounded-full bg-success/15 border-2 border-success/20 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8 text-success" />
+              </div>
+              <div>
+                <p className="font-bold text-lg">Password reset!</p>
+                <p className="text-sm text-muted-foreground mt-1">Redirecting to login...</p>
+              </div>
+            </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
@@ -68,25 +79,24 @@ export default function ResetPasswordPage() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+                {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input id="confirmPassword" type="password" placeholder="••••••••" {...register("confirmPassword")} className={cn(errors.confirmPassword && "border-destructive")} />
-                {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>}
+                {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>}
               </div>
-              <Button type="submit" disabled={isSubmitting} variant="gradient" className="w-full h-11">
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                {isSubmitting ? "Resetting..." : "Reset Password"}
+              <Button type="submit" disabled={isSubmitting} variant="primary" size="lg" className="w-full mt-2">
+                {isSubmitting ? "Resetting..." : "Reset Password"} <ArrowRight className="w-4 h-4" />
               </Button>
             </form>
           )}
 
           <div className="text-center mt-6">
-            <Link href="/auth/login" className="text-sm text-primary hover:underline">Back to login</Link>
+            <Link href="/auth/login" className="text-sm font-bold text-primary hover:underline">Back to login</Link>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

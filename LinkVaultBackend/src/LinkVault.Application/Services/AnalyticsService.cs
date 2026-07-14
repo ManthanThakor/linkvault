@@ -23,19 +23,32 @@ public class AnalyticsService : IAnalyticsService
     public async Task<ApiResponse<AnalyticsOverview>> GetOverviewAsync(Guid userId)
     {
         var linkRepo = _unitOfWork.Repository<Link>();
+        var clickLogRepo = _unitOfWork.Repository<ClickLog>();
         var now = DateTime.UtcNow;
         var links = (await linkRepo.FindAsync(l => l.UserId == userId)).ToList();
 
         var categoryRepo = _unitOfWork.Repository<Category>();
         var categories = (await categoryRepo.FindAsync(c => c.UserId == userId)).ToList();
 
+        var sevenDaysAgo = now.AddDays(-7);
+        var recentClicks = (await clickLogRepo.FindAsync(cl => cl.CreatedAt >= sevenDaysAgo))
+            .GroupBy(cl => cl.CreatedAt.Date)
+            .OrderBy(g => g.Key)
+            .Select(g => new DayClick
+            {
+                Date = g.Key.ToString("yyyy-MM-dd"),
+                Count = g.Count()
+            })
+            .ToList();
+
         var overview = new AnalyticsOverview
         {
             TotalClicks = links.Sum(l => l.ClickCount),
             TodayClicks = links.Sum(l => l.ClickCount),
             LastClick = links.Where(l => l.LastClickedAt != null).MaxBy(l => l.LastClickedAt)?.LastClickedAt,
+            ClicksByDay = recentClicks,
             TopLinks = _mapper.Map<List<LinkAnalytics>>(links.OrderByDescending(l => l.ClickCount).Take(10).ToList()),
-            MostUsedCategories = categories
+            TopCategories = categories
                 .OrderByDescending(c => c.Links.Count)
                 .Take(5)
                 .Select(c => new CategoryAnalytics

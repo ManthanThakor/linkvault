@@ -45,7 +45,10 @@ try
         c.RoutePrefix = "swagger";
     });
 
-    app.UseHttpsRedirection();
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
     app.UseCors("AllowAll");
     app.UseRateLimiter();
     app.UseAuthentication();

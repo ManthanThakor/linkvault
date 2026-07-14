@@ -2,22 +2,22 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { useLinks, useDeleteLink, useToggleFavorite, useCategories, useTags } from "@/hooks/useApi"
-import { GlassCard } from "@/components/shared/glass-card"
+import { useLinks, useDeleteLink, useToggleFavorite } from "@/hooks/useApi"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger
-} from "@/components/ui/dialog"
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useToast } from "@/components/ui/use-toast"
 import { LinkForm } from "./link-form"
-import { Search, Link2, MoreHorizontal, ExternalLink, Heart, Trash2, Edit, Plus, Globe } from "lucide-react"
+import { Search, Link2, MoreHorizontal, ExternalLink, Heart, Trash2, Edit, Plus, Globe, Copy, Sparkles } from "lucide-react"
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5253"
+const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }
+const itemAnim = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }
 
 export default function LinksPage() {
   const [search, setSearch] = useState("")
@@ -30,34 +30,26 @@ export default function LinksPage() {
   const { toast } = useToast()
 
   const handleDelete = async (id: string) => {
-    try {
-      await deleteLink.mutateAsync(id)
-      toast({ title: "Link deleted", variant: "success" })
-    } catch {
-      toast({ title: "Failed to delete", variant: "destructive" })
-    }
+    try { await deleteLink.mutateAsync(id); toast({ title: "Link deleted", variant: "success" }) }
+    catch { toast({ title: "Failed to delete", variant: "destructive" }) }
   }
 
   const handleToggleFav = async (id: string) => {
-    try {
-      await toggleFav.mutateAsync(id)
-    } catch {
-      toast({ title: "Failed to update", variant: "destructive" })
-    }
+    try { await toggleFav.mutateAsync(id) } catch { toast({ title: "Failed to update", variant: "destructive" }) }
   }
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-5">
+      <motion.div variants={itemAnim} className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Links</h1>
+          <h1 className="heading-xl text-glow-primary">Links</h1>
           <p className="text-muted-foreground mt-1">Manage all your saved links</p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button variant="gradient" size="lg"><Plus className="w-4 h-4 mr-2" /> Add Link</Button>
+            <Button variant="primary" size="lg"><Plus className="w-4 h-4" /> Add Link</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Link</DialogTitle>
               <DialogDescription>Add a new link to your vault</DialogDescription>
@@ -67,109 +59,78 @@ export default function LinksPage() {
         </Dialog>
       </motion.div>
 
-      <GlassCard>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search links..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="pl-10"
-            />
+      <motion.div variants={itemAnim}>
+        <Card>
+          <div className="p-4 border-b border-border">
+            <div className="relative max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Search links..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} className="pl-9" />
+            </div>
           </div>
-        </div>
 
-        {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-3 w-64" />
-                </div>
-                <Skeleton className="h-6 w-16 rounded-full" />
-              </div>
-            ))}
-          </div>
-        ) : (data?.items ?? []).length > 0 ? (
-          <div className="space-y-2">
-            {data!.items.map((link, i) => (
-              <motion.div
-                key={link.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="flex items-center gap-4 p-3 rounded-xl hover:bg-accent/50 transition-colors group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center flex-shrink-0">
-                  <Globe className="w-4 h-4 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{link.title}</p>
-                    {link.isFavorite && <Heart className="w-3 h-3 fill-red-500 text-red-500" />}
+          {isLoading ? (
+            <div className="p-4 space-y-2">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
+          ) : (data?.items ?? []).length > 0 ? (
+            <motion.div variants={container} initial="hidden" animate="show">
+              {(data?.items ?? []).map((link) => (
+                <motion.div key={link.id} variants={itemAnim}
+                  className="group flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition-all duration-200 border-b border-border last:border-0">
+                  <button onClick={() => handleToggleFav(link.id)} className="flex-shrink-0">
+                    <Heart className={`w-4 h-4 transition-all duration-200 ${link.isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground hover:text-destructive"}`} />
+                  </button>
+                  <div className="w-9 h-9 rounded-lg border border-border bg-surface flex items-center justify-center flex-shrink-0 group-hover:border-primary/30 group-hover:shadow-glow-primary transition-all duration-200">
+                    <Globe className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{link.url}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {link.category && <Badge variant="outline" className="text-[10px]">{link.category.name}</Badge>}
-                    <span className="text-[10px] text-muted-foreground">{link.clickCount ?? 0} clicks</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold truncate">{link.title}</p>
+                      {link.categoryName && <Badge variant="outline" size="sm">{link.categoryName}</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{link.originalUrl}</p>
                   </div>
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleFav(link.id)}>
-                    <Heart className={`w-4 h-4 ${link.isFavorite ? "fill-red-500 text-red-500" : ""}`} />
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => window.open(link.url, "_blank")}>
-                        <ExternalLink className="w-4 h-4 mr-2" /> Open
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setEditingLink(link); setCreateOpen(true) }}>
-                        <Edit className="w-4 h-4 mr-2" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(link.id)}>
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={Link2}
-            title="No links yet"
-            description="Add your first link to start building your vault"
-            actionLabel="Add Link"
-            onAction={() => setCreateOpen(true)}
-          />
-        )}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <Button variant="ghost" size="icon-sm" onClick={() => handleToggleFav(link.id)}>
+                      <Heart className={`w-3.5 h-3.5 ${link.isFavorite ? "fill-destructive text-destructive" : ""}`} />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon-sm"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => window.open(link.originalUrl, "_blank")}><ExternalLink className="w-4 h-4" /> Open</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(`${API_BASE}${link.shortUrl}`); toast({ title: "Copied!" }) }}><Copy className="w-4 h-4" /> Copy Short Link</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setEditingLink(link)}><Edit className="w-4 h-4" /> Edit</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(link.id)}><Trash2 className="w-4 h-4" /> Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <EmptyState icon={Link2} title="No links yet" description="Add your first link to start building your vault" actionLabel="Add Link" onAction={() => setCreateOpen(true)} />
+          )}
 
-        {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
-            <span className="text-sm text-muted-foreground">Page {page} of {data.totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= data.totalPages} onClick={() => setPage(page + 1)}>Next</Button>
-          </div>
-        )}
-      </GlassCard>
+          {data && data.totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
+              <span className="text-xs font-bold text-muted-foreground">Page {page} of {data.totalPages}</span>
+              <Button variant="outline" size="sm" disabled={page >= data.totalPages} onClick={() => setPage(page + 1)}>Next</Button>
+            </div>
+          )}
+        </Card>
+      </motion.div>
 
-      <Dialog open={!!editingLink && !createOpen} onOpenChange={(open) => { if (!open) setEditingLink(null); setCreateOpen(open) }}>
-        <DialogContent className="sm:max-w-lg">
+      <Dialog open={!!editingLink} onOpenChange={(open) => { if (!open) setEditingLink(null) }}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Link</DialogTitle>
             <DialogDescription>Update your link details</DialogDescription>
           </DialogHeader>
-          {editingLink && <LinkForm link={editingLink} onSuccess={() => { setEditingLink(null); setCreateOpen(false) }} />}
+          {editingLink && <LinkForm link={editingLink} onSuccess={() => setEditingLink(null)} />}
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   )
 }

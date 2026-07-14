@@ -33,6 +33,7 @@ export const linkSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   categoryId: z.string().uuid().optional(),
+  collectionId: z.string().uuid().optional(),
   tagIds: z.array(z.string().uuid()).optional(),
   collectionIds: z.array(z.string().uuid()).optional(),
   isFavorite: z.boolean().optional(),

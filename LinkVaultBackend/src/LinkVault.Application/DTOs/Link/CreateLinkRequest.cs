@@ -8,6 +8,7 @@ public class CreateLinkRequest
     public string? Notes { get; set; }
     public Guid? CategoryId { get; set; }
     public Guid? CollectionId { get; set; }
+    public List<Guid>? TagIds { get; set; }
     public string? Password { get; set; }
     public DateTime? ExpiryDate { get; set; }
 }

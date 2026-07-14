@@ -1,15 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import type {
-  User, Link, Category, Tag, Collection, Bookmark,
-  ClickLog, Notification, AuditLog, Role, LinkStats,
+  User, Link, Category, Tag, Collection,
+  Notification, AuditLog, Role, LinkStats,
   PaginatedResponse
 } from "@/types"
 
 export function useLinks(page = 1, pageSize = 20, search?: string) {
   return useQuery({
     queryKey: ["links", page, pageSize, search],
-    queryFn: () => api.get<PaginatedResponse<Link>>(`/api/links?page=${page}&pageSize=${pageSize}${search ? `&search=${search}` : ""}`),
+    queryFn: async () => {
+      if (search) {
+        const results = await api.get<Link[]>(`/api/links/search?query=${encodeURIComponent(search)}`)
+        return { items: results, page: 1, pageSize: results.length, totalCount: results.length, totalPages: 1 } as PaginatedResponse<Link>
+      }
+      return api.get<PaginatedResponse<Link>>(`/api/links?page=${page}&pageSize=${pageSize}`)
+    },
   })
 }
 
@@ -24,7 +30,15 @@ export function useLink(id: string) {
 export function useCreateLink() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Partial<Link>) => api.post<Link>("/api/links", data),
+    mutationFn: (data: { url: string; title: string; description?: string; categoryId?: string; collectionId?: string; tagIds?: string[]; collectionIds?: string[]; isFavorite?: boolean }) =>
+      api.post<Link>("/api/links", {
+        originalUrl: data.url,
+        title: data.title,
+        notes: data.description,
+        categoryId: data.categoryId,
+        collectionId: data.collectionId,
+        tagIds: data.tagIds,
+      }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["links"] }) },
   })
 }
@@ -32,7 +46,15 @@ export function useCreateLink() {
 export function useUpdateLink() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Link> }) => api.put<Link>(`/api/links/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: { url?: string; title?: string; description?: string; categoryId?: string; collectionId?: string; tagIds?: string[] } }) =>
+      api.put<Link>(`/api/links/${id}`, {
+        originalUrl: data.url,
+        title: data.title,
+        notes: data.description,
+        categoryId: data.categoryId,
+        collectionId: data.collectionId,
+        tagIds: data.tagIds,
+      }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["links"] }) },
   })
 }
@@ -141,7 +163,7 @@ export function useDeleteCollection() {
 export function useFavorites() {
   return useQuery({
     queryKey: ["favorites"],
-    queryFn: () => api.get<Link[]>("/api/links/favorites"),
+    queryFn: () => api.get<Link[]>("/api/favorites"),
   })
 }
 
@@ -153,42 +175,11 @@ export function useToggleFavorite() {
   })
 }
 
-export function useBookmarks() {
-  return useQuery({
-    queryKey: ["bookmarks"],
-    queryFn: () => api.get<Bookmark[]>("/api/bookmarks"),
-  })
-}
-
-export function useCreateBookmark() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: Partial<Bookmark>) => api.post<Bookmark>("/api/bookmarks", data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["bookmarks"] }) },
-  })
-}
-
-export function useDeleteBookmark() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => api.delete(`/api/bookmarks/${id}`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["bookmarks"] }) },
-  })
-}
-
 export function useLinkStats(id: string) {
   return useQuery({
     queryKey: ["link-stats", id],
-    queryFn: () => api.get<LinkStats>(`/api/links/${id}/stats`),
+    queryFn: () => api.get<LinkStats>(`/api/analytics/link/${id}`),
     enabled: !!id,
-  })
-}
-
-export function useClickLogs(linkId: string) {
-  return useQuery({
-    queryKey: ["click-logs", linkId],
-    queryFn: () => api.get<ClickLog[]>(`/api/links/${linkId}/clicks`),
-    enabled: !!linkId,
   })
 }
 
@@ -202,7 +193,7 @@ export function useNotifications() {
 export function useMarkNotificationRead() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/api/notifications/${id}/read`),
+    mutationFn: (id: string) => api.put(`/api/notifications/mark-read`, { notificationIds: [id] }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["notifications"] }) },
   })
 }
@@ -213,7 +204,7 @@ export function useDashboardStats() {
     queryFn: () => api.get<{
       totalLinks: number; totalClicks: number; totalCategories: number;
       totalTags: number; recentLinks: Link[]; topLinks: Link[]
-    }>("/api/dashboard/stats"),
+    }>("/api/dashboard/summary"),
   })
 }
 
@@ -223,7 +214,7 @@ export function useAnalytics() {
     queryFn: () => api.get<{
       clicksByDay: { date: string; count: number }[];
       topLinks: Link[]; topCategories: { name: string; count: number }[];
-    }>("/api/analytics"),
+    }>("/api/analytics/overview"),
   })
 }
 

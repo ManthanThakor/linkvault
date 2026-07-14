@@ -1,36 +1,34 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { motion, useSpring, useTransform } from "framer-motion"
+import { useEffect, useRef } from "react"
+import { useInView } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 interface AnimatedCounterProps {
   value: number
-  suffix?: string
-  prefix?: string
   className?: string
   duration?: number
 }
 
-export function AnimatedCounter({ value, suffix = "", prefix = "", className, duration = 1.5 }: AnimatedCounterProps) {
-  const [displayValue, setDisplayValue] = useState(0)
-  const spring = useSpring(0, { stiffness: 100, damping: 30, duration })
-  const display = useTransform(spring, (latest) => Math.floor(latest))
+export function AnimatedCounter({ value, className, duration = 1500 }: AnimatedCounterProps) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-50px" })
 
   useEffect(() => {
-    spring.set(value)
-    const unsubscribe = display.on("change", (v) => setDisplayValue(v))
-    return () => unsubscribe()
-  }, [value, spring, display])
+    if (!isInView || !ref.current) return
+    let start = 0
+    const increment = Math.ceil(value / (duration / 16))
+    const timer = setInterval(() => {
+      start += increment
+      if (start >= value) {
+        ref.current!.textContent = value.toLocaleString()
+        clearInterval(timer)
+      } else {
+        ref.current!.textContent = start.toLocaleString()
+      }
+    }, 16)
+    return () => clearInterval(timer)
+  }, [isInView, value, duration])
 
-  return (
-    <motion.span
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      className={cn("tabular-nums", className)}
-    >
-      {prefix}{displayValue.toLocaleString()}{suffix}
-    </motion.span>
-  )
+  return <span ref={ref} className={cn("tabular-nums", className)} />
 }

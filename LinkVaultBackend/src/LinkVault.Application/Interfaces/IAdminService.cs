@@ -11,4 +11,5 @@ public interface IAdminService
     Task<ApiResponse<string>> UpdateUserRoleAsync(Guid userId, string role);
     Task<ApiResponse<string>> DeleteUserAsync(Guid userId);
     Task<ApiResponse<IEnumerable<AuditLogResponse>>> GetAuditLogsAsync(int page = 1, int pageSize = 20);
+    Task<ApiResponse<IEnumerable<RoleResponse>>> GetRolesAsync();
 }

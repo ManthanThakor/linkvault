@@ -1,69 +1,74 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useFavorites, useToggleFavorite } from "@/hooks/useApi"
-import { GlassCard } from "@/components/shared/glass-card"
+import { useLinks, useToggleFavorite, useDeleteLink } from "@/hooks/useApi"
+import { Card, CardContent } from "@/components/ui/card"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Bookmark, Globe, ExternalLink, Heart, Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Heart, Globe, Trash2, Copy } from "lucide-react"
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5253"
 
 export default function FavoritesPage() {
-  const { data: favorites, isLoading } = useFavorites()
+  const { data, isLoading } = useLinks(1, 999)
   const toggleFav = useToggleFavorite()
+  const deleteLink = useDeleteLink()
   const { toast } = useToast()
-  const router = useRouter()
+  const favorites = (data?.items ?? []).filter((l) => l.isFavorite)
 
-  const handleRemove = async (id: string) => {
-    try {
-      await toggleFav.mutateAsync(id)
-      toast({ title: "Removed from favorites", variant: "success" })
-    } catch { toast({ title: "Failed to update", variant: "destructive" }) }
+  const handleToggleFav = async (id: string) => {
+    try { await toggleFav.mutateAsync(id) } catch { toast({ title: "Failed to update", variant: "destructive" }) }
+  }
+
+  const handleDelete = async (id: string) => {
+    try { await deleteLink.mutateAsync(id); toast({ title: "Deleted", variant: "success" }) }
+    catch { toast({ title: "Failed to delete", variant: "destructive" }) }
   }
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-3xl font-bold">Favorites</h1>
-        <p className="text-muted-foreground mt-1">Your favorite links at a glance</p>
-      </motion.div>
+    <div className="space-y-5">
+      <div>
+        <h1 className="heading-xl text-glow-primary">Favorites</h1>
+        <p className="text-muted-foreground mt-1">Your bookmarked links</p>
+      </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <GlassCard key={i}><Skeleton className="h-32" /></GlassCard>
-          ))}
-        </div>
-      ) : (favorites ?? []).length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {favorites!.map((link) => (
-            <GlassCard key={link.id}>
-              <div className="flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
-                    <Globe className="w-5 h-5 text-red-500" />
+        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+      ) : favorites.length > 0 ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+          {favorites.map((link) => (
+            <motion.div key={link.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <button onClick={() => handleToggleFav(link.id)}>
+                      <Heart className="w-5 h-5 fill-destructive text-destructive hover:scale-110 transition-transform" />
+                    </button>
+                    <div className="w-9 h-9 rounded-lg border border-border bg-surface flex items-center justify-center flex-shrink-0">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate">{link.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{link.originalUrl}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon-sm" onClick={() => { navigator.clipboard.writeText(`${API_BASE}${link.shortUrl}`); toast({ title: "Copied!" }) }}>
+                        <Copy className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => handleDelete(link.id)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm truncate">{link.title}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{link.url}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-auto pt-3 border-t border-border/50">
-                  <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs" onClick={() => window.open(link.url, "_blank")}>
-                    <ExternalLink className="w-3 h-3 mr-1" /> Open
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRemove(link.id)}>
-                    <Heart className="w-4 h-4 fill-red-500" />
-                  </Button>
-                </div>
-              </div>
-            </GlassCard>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       ) : (
-        <EmptyState icon={Bookmark} title="No favorites" description="Mark links as favorites to see them here" actionLabel="Browse Links" onAction={() => router.push("/links")} />
+        <EmptyState icon={Heart} title="No favorites yet" description="Click the heart icon on any link to add it here" />
       )}
     </div>
   )

@@ -1,141 +1,158 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useAnalytics, useDashboardStats } from "@/hooks/useApi"
-import { GlassCard } from "@/components/shared/glass-card"
-import { AnimatedCounter } from "@/components/shared/animated-counter"
+import { useAnalytics as useAnalyticsHook } from "@/hooks/useApi"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import dynamic from "next/dynamic"
-import { BarChart3, MousePointerClick, Link2, TrendingUp } from "lucide-react"
-
-const BarChart = dynamic(() => import("recharts").then((mod) => mod.BarChart), { ssr: false })
-const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar), { ssr: false })
-const XAxis = dynamic(() => import("recharts").then((mod) => mod.XAxis), { ssr: false })
-const YAxis = dynamic(() => import("recharts").then((mod) => mod.YAxis), { ssr: false })
-const CartesianGrid = dynamic(() => import("recharts").then((mod) => mod.CartesianGrid), { ssr: false })
-const Tooltip = dynamic(() => import("recharts").then((mod) => mod.Tooltip), { ssr: false })
-const ResponsiveContainer = dynamic(() => import("recharts").then((mod) => mod.ResponsiveContainer), { ssr: false })
-const PieChart = dynamic(() => import("recharts").then((mod) => mod.PieChart), { ssr: false })
-const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie), { ssr: false })
-const Cell = dynamic(() => import("recharts").then((mod) => mod.Cell), { ssr: false })
-
-const COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f43f5e", "#f97316", "#eab308", "#22c55e"]
+import { BarChart3, MousePointerClick, ExternalLink, TrendingUp, ArrowUpRight, Calendar, Sparkles } from "lucide-react"
 
 export default function AnalyticsPage() {
-  const { data: analytics, isLoading } = useAnalytics()
-  const { data: stats } = useDashboardStats()
+  const { data, isLoading } = useAnalyticsHook()
+  const totalClicks = data?.clicksByDay?.reduce((sum, d) => sum + d.count, 0) ?? 0
+  const topLinks = data?.topLinks ?? []
+  const topCategories = data?.topCategories ?? []
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-3xl font-bold">Analytics</h1>
+    <div className="space-y-5">
+      <div>
+        <h1 className="heading-xl text-glow-primary">Analytics</h1>
         <p className="text-muted-foreground mt-1">Track your link performance</p>
-      </motion.div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <GlassCard delay={0.1}>
-          {isLoading ? <Skeleton className="h-16" /> : (
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                <Link2 className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total Links</p>
-                <AnimatedCounter value={stats?.totalLinks ?? 0} className="text-xl font-bold" />
-              </div>
-            </div>
-          )}
-        </GlassCard>
-        <GlassCard delay={0.2}>
-          {isLoading ? <Skeleton className="h-16" /> : (
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <MousePointerClick className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total Clicks</p>
-                <AnimatedCounter value={stats?.totalClicks ?? 0} className="text-xl font-bold" />
-              </div>
-            </div>
-          )}
-        </GlassCard>
-        <GlassCard delay={0.3}>
-          {isLoading ? <Skeleton className="h-16" /> : (
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Categories</p>
-                <AnimatedCounter value={stats?.totalCategories ?? 0} className="text-xl font-bold" />
-              </div>
-            </div>
-          )}
-        </GlassCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GlassCard delay={0.4}>
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-muted-foreground" /> Clicks by Day
-          </h2>
-          {isLoading ? (
-            <Skeleton className="h-64" />
-          ) : (analytics?.clicksByDay ?? []).length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analytics!.clicksByDay}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "12px",
-                  }}
-                />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">No click data yet</div>
-          )}
-        </GlassCard>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card>
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-lg border border-primary/20 bg-primary/10 flex items-center justify-center">
+                <MousePointerClick className="w-4 h-4 text-primary" />
+              </div>
+              <ArrowUpRight className="w-3.5 h-3.5 text-success" />
+            </div>
+            <div className="text-2xl font-extrabold tracking-tight">
+              {isLoading ? <Skeleton className="h-7 w-16 rounded" /> : totalClicks.toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground font-semibold mt-0.5">Total Clicks</div>
+          </div>
+        </Card>
+        <Card>
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-lg border border-secondary/20 bg-secondary/10 flex items-center justify-center">
+                <ExternalLink className="w-4 h-4 text-secondary" />
+              </div>
+              <ArrowUpRight className="w-3.5 h-3.5 text-success" />
+            </div>
+            <div className="text-2xl font-extrabold tracking-tight">
+              {isLoading ? <Skeleton className="h-7 w-16 rounded" /> : topLinks.length}
+            </div>
+            <div className="text-xs text-muted-foreground font-semibold mt-0.5">Top Links</div>
+          </div>
+        </Card>
+        <Card>
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-lg border border-accent/20 bg-accent/10 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-accent" />
+              </div>
+              <ArrowUpRight className="w-3.5 h-3.5 text-success" />
+            </div>
+            <div className="text-2xl font-extrabold tracking-tight">
+              {isLoading ? <Skeleton className="h-7 w-16 rounded" /> : topCategories.length}
+            </div>
+            <div className="text-xs text-muted-foreground font-semibold mt-0.5">Categories</div>
+          </div>
+        </Card>
+        <Card>
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-lg border border-success/20 bg-success/10 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-success" />
+              </div>
+            </div>
+            <div className="text-2xl font-extrabold tracking-tight">
+              {isLoading ? <Skeleton className="h-7 w-16 rounded" /> : data?.clicksByDay?.length ?? 0}
+            </div>
+            <div className="text-xs text-muted-foreground font-semibold mt-0.5">Days Tracked</div>
+          </div>
+        </Card>
+      </div>
 
-        <GlassCard delay={0.5}>
-          <h2 className="text-lg font-semibold mb-4">Top Categories</h2>
-          {isLoading ? (
-            <Skeleton className="h-64" />
-          ) : (analytics?.topCategories ?? []).length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={analytics!.topCategories}
-                  dataKey="count"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  innerRadius={60}
-                  label={({ name, percent }: any) => `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                >
-                  {analytics!.topCategories.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "12px",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">No category data yet</div>
-          )}
-        </GlassCard>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <Card>
+          <CardHeader>
+            <CardTitle>Clicks by Day</CardTitle>
+            {data?.clicksByDay && <Badge variant="primary" size="sm">{data.clicksByDay.length} days</Badge>}
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-44 rounded-lg" />
+            ) : (data?.clicksByDay ?? []).length > 0 ? (
+              <div className="flex items-end justify-between h-44 gap-2">
+                {data!.clicksByDay!.map((day) => {
+                  const maxCount = Math.max(...data!.clicksByDay!.map(d => d.count), 1)
+                  const h = Math.max((day.count / maxCount) * 100, 3)
+                  const label = new Date(day.date).toLocaleDateString(undefined, { weekday: "short" })
+                  return (
+                    <div key={day.date} className="flex flex-col items-center gap-1.5 flex-1">
+                      <span className="text-[9px] font-bold text-muted-foreground">{day.count}</span>
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${h}%` }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        className="w-full rounded bg-gradient-to-t from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity"
+                      />
+                      <span className="text-[9px] font-bold text-muted-foreground">{label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-14">No click data yet</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Performing Links</CardTitle>
+            <Badge variant="primary" size="sm">{topLinks.length} links</Badge>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
+            ) : topLinks.length > 0 ? (
+              <div className="space-y-1">
+                {topLinks.slice(0, 5).map((link: any, i: number) => (
+                  <motion.div
+                    key={link.id ?? i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-surface-hover transition-colors"
+                  >
+                    <div className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-xs font-extrabold ${
+                      i === 0 ? "border-amber-500/40 bg-amber-500/10 text-amber-500" :
+                      i === 1 ? "border-gray-400/40 bg-gray-400/10 text-gray-400" :
+                      i === 2 ? "border-orange-600/40 bg-orange-600/10 text-orange-600" :
+                      "border-border bg-surface text-muted-foreground"
+                    }`}>{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate">{link.title ?? "Untitled"}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{link.originalUrl ?? ""}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-extrabold">{link.clickCount ?? 0}</p>
+                      <p className="text-[9px] font-bold text-muted-foreground">clicks</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">No data yet</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

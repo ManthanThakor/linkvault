@@ -3,130 +3,123 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/hooks/useApi"
-import { GlassCard } from "@/components/shared/glass-card"
+import { Card, CardContent } from "@/components/ui/card"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { FolderTree, Plus, Edit, Trash2, Palette } from "lucide-react"
+import { FolderTree, Plus, Edit, Trash2 } from "lucide-react"
+
+const colors = ["#ff2d95", "#00e5ff", "#39ff14", "#ff6b35", "#ffd700", "#a855f7", "#06b6d4", "#f43f5e"]
 
 export default function CategoriesPage() {
   const { data: categories, isLoading } = useCategories()
-  const createCategory = useCreateCategory()
-  const updateCategory = useUpdateCategory()
-  const deleteCategory = useDeleteCategory()
+  const createCat = useCreateCategory()
+  const updateCat = useUpdateCategory()
+  const deleteCat = useDeleteCategory()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
-  const [color, setColor] = useState("#6366f1")
+  const [color, setColor] = useState("#ff2d95")
   const [saving, setSaving] = useState(false)
 
-  const reset = () => { setName(""); setDescription(""); setColor("#6366f1"); setEditing(null) }
+  const reset = () => { setName(""); setDescription(""); setColor("#ff2d95"); setEditing(null) }
 
   const handleSave = async () => {
     if (!name.trim()) return
     setSaving(true)
     try {
-      if (editing) {
-        await updateCategory.mutateAsync({ id: editing.id, data: { name, description, color } })
-        toast({ title: "Category updated", variant: "success" })
-      } else {
-        await createCategory.mutateAsync({ name, description, color })
-        toast({ title: "Category created", variant: "success" })
-      }
+      if (editing) { await updateCat.mutateAsync({ id: editing.id, data: { name, description, color } }); toast({ title: "Category updated", variant: "success" }) }
+      else { await createCat.mutateAsync({ name, description, color }); toast({ title: "Category created", variant: "success" }) }
       setOpen(false); reset()
-    } catch (err: any) {
-      toast({ title: "Failed to save", description: err.message, variant: "destructive" })
+    } catch (err: any) { toast({ title: "Failed to save", description: err.message, variant: "destructive" })
     } finally { setSaving(false) }
   }
 
   const handleDelete = async (id: string) => {
-    try {
-      await deleteCategory.mutateAsync(id)
-      toast({ title: "Category deleted", variant: "success" })
-    } catch { toast({ title: "Failed to delete", variant: "destructive" }) }
+    try { await deleteCat.mutateAsync(id); toast({ title: "Category deleted", variant: "success" }) }
+    catch { toast({ title: "Failed to delete", variant: "destructive" }) }
   }
 
-  const colors = ["#6366f1", "#8b5cf6", "#ec4899", "#f43f5e", "#f97316", "#eab308", "#22c55e", "#14b8a6", "#06b6d4", "#3b82f6"]
-
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Categories</h1>
+          <h1 className="heading-xl text-glow-primary">Categories</h1>
           <p className="text-muted-foreground mt-1">Organize your links into categories</p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); setOpen(o) }}>
           <DialogTrigger asChild>
-            <Button variant="gradient" size="lg"><Plus className="w-4 h-4 mr-2" /> Add Category</Button>
+            <Button variant="primary" size="lg"><Plus className="w-4 h-4" /> Add Category</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>{editing ? "Edit Category" : "Create Category"}</DialogTitle>
               <DialogDescription>{editing ? "Update category details" : "Add a new category"}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Category name" />
-              </div>
-              <div className="space-y-2">
-                <Label>Description (optional)</Label>
-                <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description" />
-              </div>
-              <div className="space-y-2">
-                <Label>Color</Label>
+              <div className="space-y-2"><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Description</Label><Input value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Color</Label>
                 <div className="flex flex-wrap gap-2">
                   {colors.map((c) => (
-                    <button key={c} onClick={() => setColor(c)} className={`w-8 h-8 rounded-lg transition-transform ${color === c ? "ring-2 ring-offset-2 ring-foreground scale-110" : ""}`} style={{ backgroundColor: c }} />
+                    <button key={c} onClick={() => setColor(c)}
+                      className={`w-8 h-8 rounded-md transition-all duration-200 ${color === c ? "ring-2 ring-foreground ring-offset-2 ring-offset-surface-elevated scale-110 shadow-lg" : "hover:scale-105"} `}
+                      style={{ backgroundColor: c, boxShadow: color === c ? `0 0 12px ${c}80` : "none" }} />
                   ))}
                 </div>
               </div>
-              <Button onClick={handleSave} disabled={saving || !name.trim()} variant="gradient" className="w-full">
+              <Button onClick={handleSave} disabled={saving || !name.trim()} variant="primary" className="w-full">
                 {saving ? "Saving..." : editing ? "Update" : "Create"}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
-      </motion.div>
+      </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <GlassCard key={i}><Skeleton className="h-24" /></GlassCard>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
       ) : (categories ?? []).length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {categories!.map((cat) => (
-            <GlassCard key={cat.id}>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: cat.color + "20" }}>
-                    <FolderTree className="w-5 h-5" style={{ color: cat.color }} />
+            <motion.div key={cat.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
+              className="group" style={{ perspective: "600px" }}>
+              <Card className="relative overflow-hidden hover:scale-[1.02] transition-all duration-300"
+                style={{ borderColor: cat.color + "30" }}>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ background: `radial-gradient(circle at 50% 0%, ${cat.color}15, transparent 70%)` }} />
+                <CardContent className="p-4 relative">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg border-2 flex items-center justify-center font-extrabold text-sm"
+                        style={{ borderColor: cat.color + "40", backgroundColor: cat.color + "15", color: cat.color }}>
+                        {cat.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">{cat.name}</p>
+                        {cat.description && <p className="text-xs text-muted-foreground mt-0.5">{cat.description}</p>}
+                        <p className="text-[10px] font-bold text-muted-foreground mt-0.5">{cat.linkCount} links</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon-sm" onClick={() => { setEditing(cat); setName(cat.name); setDescription(cat.description ?? ""); setColor(cat.color ?? colors[0]); setOpen(true) }}>
+                        <Edit className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => handleDelete(cat.id)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium">{cat.name}</h3>
-                    {cat.description && <p className="text-xs text-muted-foreground">{cat.description}</p>}
-                  </div>
-                </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(cat); setName(cat.name); setDescription(cat.description ?? ""); setColor(cat.color ?? colors[0]); setOpen(true) }}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(cat.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </GlassCard>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       ) : (
