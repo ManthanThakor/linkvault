@@ -31,6 +31,12 @@
   --animate-neon-pulse: neon-pulse 2s ease-in-out infinite;
   --animate-spin-slow: spin 8s linear infinite;
   --animate-spin-slower: spin 12s linear infinite reverse;
+  --animate-gradient-shift: gradient-shift 6s ease infinite;
+  --animate-border-glow: border-glow 3s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+  --animate-slide-up-fade: slide-up-fade 0.6s ease-out forwards;
+  --animate-scale-in: scale-in 0.5s ease-out forwards;
+  --animate-counter-pop: counter-pop 0.4s ease-out forwards;
 }
 
 @layer base {
@@ -68,34 +74,34 @@
   }
 
   .dark {
-    --bg: oklch(0.025 0.03 285);
+    --bg: oklch(0.02 0.02 285);
     --fg: oklch(0.97 0.005 285);
-    --surface: oklch(0.07 0.035 285);
-    --surface-hover: oklch(0.10 0.04 285);
-    --surface-elevated: oklch(0.09 0.04 285);
-    --border: oklch(0.16 0.04 285);
+    --surface: oklch(0.07 0.03 285);
+    --surface-hover: oklch(0.10 0.035 285);
+    --surface-elevated: oklch(0.09 0.035 285);
+    --border: oklch(0.20 0.04 285);
     --border-active: oklch(0.55 0.28 330);
-    --primary: oklch(0.60 0.28 330);
-    --primary-hover: oklch(0.55 0.30 330);
+    --primary: oklch(0.62 0.28 330);
+    --primary-hover: oklch(0.57 0.30 330);
     --primary-fg: oklch(0.97 0 0);
-    --secondary: oklch(0.55 0.22 195);
-    --secondary-hover: oklch(0.50 0.24 195);
+    --secondary: oklch(0.58 0.22 195);
+    --secondary-hover: oklch(0.53 0.24 195);
     --secondary-fg: oklch(0.97 0 0);
-    --accent: oklch(0.65 0.25 140);
+    --accent: oklch(0.68 0.25 140);
     --accent-fg: oklch(0.05 0 0);
-    --muted: oklch(0.30 0.03 285);
-    --muted-fg: oklch(0.45 0.03 285);
-    --destructive: oklch(0.50 0.25 25);
+    --muted: oklch(0.40 0.035 285);
+    --muted-fg: oklch(0.63 0.04 285);
+    --destructive: oklch(0.55 0.25 25);
     --destructive-fg: oklch(0.97 0 0);
-    --success: oklch(0.55 0.22 145);
-    --warning: oklch(0.60 0.22 85);
-    --info: oklch(0.50 0.20 230);
-    --glow-primary: 0 0 20px oklch(0.60 0.28 330 / 0.15), 0 0 40px oklch(0.60 0.28 330 / 0.05);
-    --glow-primary-lg: 0 0 25px oklch(0.60 0.28 330 / 0.25), 0 0 50px oklch(0.60 0.28 330 / 0.08);
-    --glow-secondary: 0 0 20px oklch(0.55 0.22 195 / 0.15), 0 0 40px oklch(0.55 0.22 195 / 0.05);
-    --text-glow-primary: 0 0 30px oklch(0.60 0.26 330 / 0.3), 0 0 60px oklch(0.60 0.26 330 / 0.08);
-    --text-glow-secondary: 0 0 30px oklch(0.60 0.20 195 / 0.3), 0 0 60px oklch(0.60 0.20 195 / 0.08);
-    --text-glow-accent: 0 0 30px oklch(0.70 0.25 140 / 0.3), 0 0 60px oklch(0.70 0.25 140 / 0.08);
+    --success: oklch(0.58 0.22 145);
+    --warning: oklch(0.63 0.22 85);
+    --info: oklch(0.55 0.20 230);
+    --glow-primary: 0 0 20px oklch(0.62 0.28 330 / 0.15), 0 0 40px oklch(0.62 0.28 330 / 0.05);
+    --glow-primary-lg: 0 0 25px oklch(0.62 0.28 330 / 0.25), 0 0 50px oklch(0.62 0.28 330 / 0.08);
+    --glow-secondary: 0 0 20px oklch(0.58 0.22 195 / 0.15), 0 0 40px oklch(0.58 0.22 195 / 0.05);
+    --text-glow-primary: 0 0 30px oklch(0.62 0.26 330 / 0.35), 0 0 60px oklch(0.62 0.26 330 / 0.1);
+    --text-glow-secondary: 0 0 30px oklch(0.60 0.20 195 / 0.35), 0 0 60px oklch(0.60 0.20 195 / 0.1);
+    --text-glow-accent: 0 0 30px oklch(0.70 0.25 140 / 0.35), 0 0 60px oklch(0.70 0.25 140 / 0.1);
   }
 
   body {
@@ -142,6 +148,39 @@
   .text-glow-accent { text-shadow: var(--text-glow-accent); }
   .shadow-glow-primary { box-shadow: var(--glow-primary); }
   .shadow-glow-secondary { box-shadow: var(--glow-secondary); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: var(--primary); box-shadow: var(--glow-primary); }
+  33% { border-color: var(--secondary); box-shadow: var(--glow-secondary); }
+  66% { border-color: var(--accent); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes slide-up-fade {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes counter-pop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.5); }
+  70% { transform: translateY(-2px) scale(1.1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes neon-pulse {

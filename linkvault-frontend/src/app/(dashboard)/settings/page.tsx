@@ -7,7 +7,6 @@ import { useToast } from "@/components/ui/use-toast"
 import { Palette, Bell, Shield, LogOut, Sun, Moon, Monitor } from "lucide-react"
 
 export default function SettingsPage() {
-  const { theme, setTheme } = useTheme()
   const { toast } = useToast()
 
   return (
@@ -25,16 +24,11 @@ export default function SettingsPage() {
             </div>
             <div className="flex-1">
               <h3 className="font-bold text-sm">Theme</h3>
-              <p className="text-xs text-muted-foreground mb-3">Choose your preferred appearance</p>
+              <p className="text-xs text-muted-foreground mb-3">Appearance</p>
               <div className="flex gap-2">
-                {[{ value: "light", icon: Sun, label: "Light" }, { value: "dark", icon: Moon, label: "Dark" }, { value: "system", icon: Monitor, label: "System" }].map(({ value, icon: Icon, label }) => (
-                  <button key={value} onClick={() => setTheme(value)}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-lg border text-sm font-bold transition-all ${
-                      theme === value ? "border-primary bg-primary/10 text-primary shadow-glow-primary" : "border-border hover:border-primary/30 text-muted-foreground hover:text-foreground"
-                    }`}>
-                    <Icon className="w-4 h-4" /> {label}
-                  </button>
-                ))}
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-primary bg-primary/10 text-primary shadow-glow-primary text-sm font-bold">
+                  <Moon className="w-4 h-4" /> Dark (default)
+                </div>
               </div>
             </div>
           </div>
