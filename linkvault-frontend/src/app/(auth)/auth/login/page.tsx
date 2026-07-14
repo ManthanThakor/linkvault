@@ -43,6 +43,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      <div className="absolute top-4 left-4 z-10">
+        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-semibold flex items-center gap-1.5">
+          <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+          Back to home
+        </Link>
+      </div>
       <div className="hidden lg:flex w-1/2 bg-surface border-r-2 border-border items-center justify-center p-12">
         <div className="max-w-sm">
           <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center shadow-[0_3px_0_oklch(0.40_0.24_25)] mb-6">

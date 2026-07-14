@@ -8,17 +8,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-primary text-primary-foreground hover:bg-primary-hover shadow-[0_0_15px_oklch(0.60_0.26_330/0.2)] hover:shadow-[0_0_25px_oklch(0.60_0.26_330/0.4)]",
+          "bg-primary text-primary-foreground hover:bg-primary-hover shadow-[var(--glow-primary)] hover:shadow-[var(--glow-primary-lg)]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary-hover shadow-[0_0_15px_oklch(0.60_0.20_195/0.2)] hover:shadow-[0_0_25px_oklch(0.60_0.20_195/0.4)]",
+          "bg-secondary text-secondary-foreground hover:bg-secondary-hover shadow-[var(--glow-secondary)] hover:shadow-[var(--glow-secondary)]",
         outline:
-          "border border-border bg-transparent hover:bg-surface text-foreground hover:border-primary hover:shadow-glow-primary",
+          "border border-border bg-transparent hover:bg-surface text-foreground hover:border-primary hover:shadow-[var(--glow-primary)]",
         ghost:
           "bg-transparent hover:bg-surface text-muted-foreground hover:text-foreground",
         destructive:
-          "bg-destructive text-destructive-foreground hover:brightness-110 shadow-[0_0_15px_oklch(0.55_0.25_25/0.3)]",
+          "bg-destructive text-destructive-foreground hover:brightness-110",
         accent:
-          "bg-accent text-accent-foreground hover:brightness-110 shadow-[0_0_15px_oklch(0.70_0.25_140/0.3)]",
+          "bg-accent text-accent-foreground hover:brightness-110",
       },
       size: {
         sm: "h-8 px-3 text-xs gap-1.5 rounded-md",
