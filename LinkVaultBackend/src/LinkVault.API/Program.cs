@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using LinkVault.API.Extensions;
 using LinkVault.API.Middleware;
@@ -33,6 +34,12 @@ try
     builder.Services.AddApplication();
 
     var app = builder.Build();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<LinkVault.Infrastructure.Data.ApplicationDbContext>();
+        db.Database.Migrate();
+    }
 
     app.UseMiddleware<ExceptionMiddleware>();
 
